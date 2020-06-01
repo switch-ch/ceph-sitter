@@ -2,15 +2,15 @@
 
 Scripts to help babysitting a flaky Ceph cluster
 
-- check-osds.pl - generate concise report about down OSDs
-- check-osds-loop.sh - run check-osds.pl in a loop
+- `check-osds.pl` - generate concise report about down OSDs
+- `check-osds-loop.sh` - run check-osds.pl in a loop
   - optionally saves reports and and exports them to Web server
 
 The `check-osds` script collects information about non-up OSDs and
 hosts in the cluster.  Some information comes from global Ceph cluster
 state, i.e. ceph osd tree.  Some information is collected on the OSD
 hosts, in particular possible processes related to those non-up OSDs,
-as well as configuration information found in /etc/ceph/ceph.conf.
+as well as configuration information found in `/etc/ceph/ceph.conf`.
 
 This information is condensed into a compact report intended to be helpful
 for diagnosis and recovery/mitigation.
@@ -31,9 +31,9 @@ host unil0083 osd   8 (class hdd, weight  7.3 bsa stupid.): down - ceph-osd runn
               osd  46 (class hdd, weight  7.3 bsa stupid.): down - ceph-osd running since 20:13, pid 2713709
 ```
 
-Options found in /etc/ceph/ceph.conf (or not):
+Options found in `/etc/ceph/ceph.conf` (or not):
 
-  bsa: bluestore allocator
+- bsa: bluestore allocator
 
 Option values are decorated with a provenance indicator:
 - `.` - specified in ceph.conf for a specific OSD (section [osd.ID])
