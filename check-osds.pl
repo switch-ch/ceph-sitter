@@ -86,9 +86,11 @@ sub collect_information_from_interesting_hosts () {
                     = m@^(\S+)\s+(\d+)\s+([0-9.]+)\s+([0-9.]+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.*)@) {
                     if (($id) = $command =~ m@(?:/usr\S+/)?ceph-osd.* --id (\d+)@) {
                         $nodes{$id}->{osd_pid} = $pid;
+                        $nodes{$id}->{osd_start} = $start;
                         # printf("  OSD $id process is running on host $host (PID $pid)\n");
                     } elsif (($id) = $command =~ m@ceph-kvstore-tool bluestore-kv /var/lib/ceph/osd/ceph-(\d+) compact@) {
                         $nodes{$id}->{compact_pid} = $pid;
+                        $nodes{$id}->{compact_start} = $start;
                         # printf("  OSD $id is being compacted offline on host $host (PID $pid).\n");
                     }
                 }
@@ -157,16 +159,18 @@ sub print_report() {
                $blue_alloc, pretty_inheritance_level($blue_alloc_i),
                $osd->{status});
         if (exists $osd->{osd_pid}) {
-            printf(" - OSD process is running (PID %d)", $osd->{osd_pid});
+            printf(" - ceph-osd running since %s, pid %d",
+                   $osd->{osd_start}, $osd->{osd_pid});
         }
         if (exists $osd->{compact_pid}) {
-            printf(" - Compaction job is running (PID %d)", $osd->{compact_pid});
+            printf(" - compaction running since %s, pid %d",
+                   $osd->{compact_start}, $osd->{compact_pid});
         }
         if (! exists $osd->{compact_pid} and ! exists $osd->{osd_pid}) {
             if ($id == 85) {
                 printf(" - THIS OSD HAS ISSUES.  We're still discussing whether to recreate it");
             } else {
-                printf(" - Neither OSD nor compaction jobs found");
+                printf(" - neither OSD nor compaction jobs found");
                 if ($helpful_suggestions) {
                     printf("\n  SUGGESTION:\n");
                     printf("    ssh %s sudo systemctl start ceph-osd@%d",
