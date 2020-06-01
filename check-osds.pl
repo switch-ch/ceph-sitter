@@ -142,12 +142,15 @@ sub pretty_inheritance_level($ ) {
 
 sub print_report() {
     print(scalar(localtime(time)),"\n\n");
-    my ($id, $osd, $bsa, $bsa_i, $host, $last_host, $host_head);
+    my ($id, $osd, $bsa, $bsa_i, $host, $last_host, $host_head, $unhealthy_count);
+
+    $unhealthy_count = 0;
 
     foreach $id (sort { $nodes{$a}->{host} cmp $nodes{$b}->{host} || $a <=> $b } keys %nodes) {
         next if $id < 0;        # Ignore hosts and root
         $osd = $nodes{$id};
         next if $osd->{status} eq 'up';
+        ++$unhealthy_count;
         $host = $osd->{host};
         #
         # Which allocator does this OSD use?
@@ -181,7 +184,11 @@ sub print_report() {
         printf("\n");
     }
 
-    print("\nFor explanation the output, see https://github.com/switch-ch/ceph-sitter\n");
+    if ($unhealthy_count == 0) {
+        printf("Congratulations, all OSDs seem to be up.\n");
+    } else {
+        print("\nFor explanation the output, see https://github.com/switch-ch/ceph-sitter\n");
+    }
     1;
 }
 
