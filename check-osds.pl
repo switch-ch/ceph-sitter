@@ -167,15 +167,11 @@ sub print_report() {
                    $osd->{compact_start}, $osd->{compact_pid});
         }
         if (! exists $osd->{compact_pid} and ! exists $osd->{osd_pid}) {
-            if ($id == 85) {
-                printf(" - THIS OSD HAS ISSUES.  We're still discussing whether to recreate it");
-            } else {
-                printf(" - neither OSD nor compaction jobs found");
-                if ($helpful_suggestions) {
-                    printf("\n  SUGGESTION:\n");
-                    printf("    ssh %s sudo systemctl start ceph-osd@%d",
-                           $host, $id);
-                }
+            printf(" - neither OSD nor compaction jobs found");
+            if ($helpful_suggestions) {
+                printf("\n  SUGGESTION:\n");
+                printf("    ssh %s sudo systemctl start ceph-osd@%d",
+                       $host, $id);
             }
         }
         printf("\n");
