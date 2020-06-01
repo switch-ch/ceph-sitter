@@ -142,21 +142,24 @@ sub pretty_inheritance_level($ ) {
 
 sub print_report() {
     print(scalar(localtime(time)),"\n\n");
+    my ($id, $osd, $bsa, $bsa_i, $host, $last_host, $host_head);
 
-    foreach my $id (sort { $nodes{$a}->{host} cmp $nodes{$b}->{host} || $a <=> $b } keys %nodes) {
+    foreach $id (sort { $nodes{$a}->{host} cmp $nodes{$b}->{host} || $a <=> $b } keys %nodes) {
         next if $id < 0;        # Ignore hosts and root
-        my $osd = $nodes{$id};
+        $osd = $nodes{$id};
         next if $osd->{status} eq 'up';
-        my $host = $osd->{host};
+        $host = $osd->{host};
         #
         # Which allocator does this OSD use?
         #
-        my ($blue_alloc, $blue_alloc_i, $default) = node_option($id, 'bluestore allocator', 'bitmap');
-        # warn "host $host osd $id allocator $blue_alloc ($blue_alloc_i)\n";
-
-        printf("host %s osd %3d (class %s, weight %4.1f bsa %s%s): %s",
-               $osd->{host}, $id, $osd->{class}, $osd->{weight},
-               $blue_alloc, pretty_inheritance_level($blue_alloc_i),
+        ($bsa, $bsa_i) = node_option($id, 'bluestore allocator', 'bitmap');
+        $host_head = (defined $last_host and $last_host eq $host)
+            ? ' ' x (length("host ")+length($host))
+            : sprintf("host %s", $host);
+        $last_host = $host;
+        printf("%s osd %3d (class %s, weight %4.1f bsa %s%s): %s",
+               $host_head, $id, $osd->{class}, $osd->{weight},
+               $bsa, pretty_inheritance_level($bsa_i),
                $osd->{status});
         if (exists $osd->{osd_pid}) {
             printf(" - ceph-osd running since %s, pid %d",
