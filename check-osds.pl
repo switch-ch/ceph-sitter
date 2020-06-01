@@ -54,7 +54,7 @@ sub collect_osd_tree () {
 
 sub collect_information_from_interesting_hosts () {
     my %interesting_hosts = ();
-    my ($user, $pid, $id);
+    my ($user, $pid, $pcpu, $pmem, $vsz, $rss, $tty, $stat, $start, $time, $command, $id);
 
     # Let's say all hosts with non-"up" OSDs are interesting.
     #
@@ -82,12 +82,15 @@ sub collect_information_from_interesting_hosts () {
                 ++$mode;
             }
             if ($mode == 0) {   # ps axwu
-                if (($user, $pid, $id) = m@^(\S+)\s+(\d+)\s+.* (?:/usr\S+/)?ceph-osd.* --id (\d+)@) {
-                    $nodes{$id}->{osd_pid} = $pid;
-                    # printf("  OSD $id process is running on host $host (PID $pid)\n");
-                } elsif (($user, $pid, $id) = m@(\S+)\s+(\d+)\s+.* ceph-kvstore-tool bluestore-kv /var/lib/ceph/osd/ceph-(\d+) compact@) {
-                    $nodes{$id}->{compact_pid} = $pid;
-                    # printf("  OSD $id is being compacted offline on host $host (PID $pid).\n");
+                if (($user, $pid, $pcpu, $pmem, $vsz, $rss, $tty, $stat, $start, $time, $command)
+                    = m@^(\S+)\s+(\d+)\s+([0-9.]+)\s+([0-9.]+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.*)@) {
+                    if (($id) = $command =~ m@(?:/usr\S+/)?ceph-osd.* --id (\d+)@) {
+                        $nodes{$id}->{osd_pid} = $pid;
+                        # printf("  OSD $id process is running on host $host (PID $pid)\n");
+                    } elsif (($id) = $command =~ m@ceph-kvstore-tool bluestore-kv /var/lib/ceph/osd/ceph-(\d+) compact@) {
+                        $nodes{$id}->{compact_pid} = $pid;
+                        # printf("  OSD $id is being compacted offline on host $host (PID $pid).\n");
+                    }
                 }
             } elsif ($mode == 1) { # cat /etc/ceph/ceph.conf
                 next if /^#/;
