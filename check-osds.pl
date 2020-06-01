@@ -157,8 +157,9 @@ sub print_report() {
             ? ' ' x (length("host ")+length($host))
             : sprintf("host %s", $host);
         $last_host = $host;
-        printf("%s osd %3d (class %s, weight %4.1f bsa %s%s): %s",
-               $host_head, $id, $osd->{class}, $osd->{weight},
+        printf("%s osd %3d (%4.1f %s bsa=%s%s): %s",
+               $host_head, $id,
+               $osd->{weight}, $osd->{class},
                $bsa, pretty_inheritance_level($bsa_i),
                $osd->{status});
         if (exists $osd->{osd_pid}) {
@@ -180,30 +181,7 @@ sub print_report() {
         printf("\n");
     }
 
-    ## The output format has become a little convoluted,
-    ## so a few words of explanation are in order.
-    ##
-    print(<<EOM);
-
-LEGEND
-
-This script collects information about non-up OSDs and hosts in the cluster.
-Some information comes from global Ceph cluster state, i.e. ceph osd tree.
-Some information is collected on the OSD hosts, in particular possible
-processes related to those non-up OSDs, as well as configuration information
-found in /etc/ceph/ceph.conf.
-This information is condensed into a compact report intended to be helpful
-for diagnosis and recovery/mitigation.
-
-Options found in /etc/ceph/ceph.conf (or not):
-
-  bsa: bluestore allocator
-
-Option values are decorated with a provenance indicator:
-  . - specified in ceph.conf for a specific OSD (section [osd.ID])
-  * - specified in ceph.conf for all OSDs on the host (section [osd])
-  @ - system default (not configured in ceph.conf)
-EOM
+    print("\nFor explanation the output, see https://github.com/switch-ch/ceph-sitter\n");
     1;
 }
 
