@@ -20,15 +20,15 @@ Here is an example report showing nine down OSDs on six servers:
 ```
 Mon Jun  1 20:21:02 2020
 
-host unil0005 osd 106 ( 3.7 hdd bsa:bitmap@): down - compaction running since 20:19, pid 3040105
-host unil0017 osd 207 ( 3.6 hdd bsa:bitmap@): down - ceph-osd running since 19:52, pid 4022599
-host unil0043 osd 389 ( 3.7 hdd bsa:bitmap@): down - ceph-osd running since 20:16, pid 2147385
-host unil0047 osd  36 ( 3.6 hdd bsa:bitmap@): down - compaction running since 19:56, pid 3429281
-host unil0081 osd  88 ( 7.3 hdd bsa:bitmap@): down - ceph-osd running since 19:49, pid 2424998
-host unil0083 osd   8 ( 7.3 hdd bsa:stupid.): down - ceph-osd running since 20:15, pid 2714906
-              osd  14 ( 7.3 hdd bsa:stupid.): down - ceph-osd running since 20:12, pid 2713035
-              osd  35 ( 7.3 hdd bsa:stupid.): down - ceph-osd running since 20:12, pid 2713614
-              osd  46 ( 7.3 hdd bsa:stupid.): down - ceph-osd running since 20:13, pid 2713709
+host unil0005 osd 106 ( 3.7 hdd bsa:bitmap@ rwy=4MiB@): down - compaction running since 20:19, pid 3040105
+host unil0017 osd 207 ( 3.6 hdd bsa:bitmap@ rwy=4MiB@): down - ceph-osd running since 19:52, pid 4022599
+host unil0043 osd 389 ( 3.7 hdd bsa:bitmap@ rwy=4MiB@): down - ceph-osd running since 20:16, pid 2147385
+host unil0047 osd  36 ( 3.6 hdd bsa:bitmap@ rwy=4MiB@): down - compaction running since 19:56, pid 3429281
+host unil0081 osd  88 ( 7.3 hdd bsa:bitmap@ rwy=4MiB@): down - ceph-osd running since 19:49, pid 2424998
+host unil0083 osd   8 ( 7.3 hdd bsa:stupid. rwy=4MiB@): down - ceph-osd running since 20:15, pid 2714906
+              osd  14 ( 7.3 hdd bsa:stupid. rwy=4MiB@): down - ceph-osd running since 20:12, pid 2713035
+              osd  35 ( 7.3 hdd bsa:stupid. rwy=4MiB@): down - ceph-osd running since 20:12, pid 2713614
+              osd  46 ( 7.3 hdd bsa:stupid. rwy=4MiB@): down - ceph-osd running since 20:13, pid 2713709
 ```
 
 The items in parenthesis after the OSD ID:
@@ -40,6 +40,7 @@ The items in parenthesis after the OSD ID:
 Options:
 
 - bsa: bluestore allocator (`stupid` or `bitmap`)
+- rwy: bluefs max log runway (4MiB by default)
 
 Option values are decorated with a provenance indicator:
 - `.` - specified in ceph.conf for a specific OSD (section [osd.ID])
@@ -63,7 +64,7 @@ Cool, the cluster works.  Maybe you should take a break!
 ```
 Tue Jun  2 12:13:48 2020
 
-host unil0045 osd 138 ( 3.6 hdd bsa=bitmap@): down - ceph-osd running since 12:11, pid 3624362
+host unil0045 osd 138 ( 3.6 hdd bsa=bitmap@ rwy=4MiB@): down - ceph-osd running since 12:11, pid 3624362
 ```
 
 Here we have a single OSD that is seen as "down" in the cluster, even
@@ -89,8 +90,8 @@ was only started about two minutes ago, so it is still in the
 ```
 Tue Jun  2 12:59:54 2020
 
-host unil0006 osd  95 ( 3.6 hdd bsa=bitmap@): down - ceph-osd running since 12:59, pid 432201
-host unil0017 osd 198 ( 3.6 hdd bsa=bitmap@): down - compaction running since 12:51, pid 79071
+host unil0006 osd  95 ( 3.6 hdd bsa=bitmap@ rwy=4MiB@): down - ceph-osd running since 12:59, pid 432201
+host unil0017 osd 198 ( 3.6 hdd bsa=bitmap@ rwy=4MiB@): down - compaction running since 12:51, pid 79071
 
 For explanation the output, see https://github.com/switch-ch/ceph-sitter
 ```

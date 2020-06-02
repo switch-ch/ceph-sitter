@@ -100,6 +100,12 @@ sub collect_information_from_interesting_hosts () {
                     $sec = $1;
                 } elsif (/^(.*\S)\s*=\s*(.*)/) {
                     my ($option, $value) = ($1, $2);
+                    #
+                    # Options can be written with spaces or underscores.
+                    # We use spaces as the canonical form.
+                    #
+                    $option =~ s/[ _]+/ /g;
+
                     if ($sec eq 'osd') {
                         my $node = $nodes{$host_ids{$host}};
                         $node->{conf_options} = {} unless exists $node->{conf_options};
@@ -142,7 +148,7 @@ sub pretty_inheritance_level($ ) {
 
 sub print_report() {
     print(scalar(localtime(time)),"\n\n");
-    my ($id, $osd, $bsa, $bsa_i, $host, $last_host, $host_head, $unhealthy_count);
+    my ($id, $osd, $value, $inheritance, $host, $last_host, $host_head, $unhealthy_count);
 
     $unhealthy_count = 0;
 
@@ -152,19 +158,36 @@ sub print_report() {
         next if $osd->{status} eq 'up';
         ++$unhealthy_count;
         $host = $osd->{host};
-        #
-        # Which allocator does this OSD use?
-        #
-        ($bsa, $bsa_i) = node_option($id, 'bluestore allocator', 'bitmap');
         $host_head = (defined $last_host and $last_host eq $host)
             ? ' ' x (length("host ")+length($host))
             : sprintf("host %s", $host);
         $last_host = $host;
-        printf("%s osd %3d (%4.1f %s bsa=%s%s): %s",
+        printf("%s osd %3d (%4.1f %s",
                $host_head, $id,
-               $osd->{weight}, $osd->{class},
-               $bsa, pretty_inheritance_level($bsa_i),
-               $osd->{status});
+               $osd->{weight}, $osd->{class});
+
+        foreach my $option (
+            (
+             {
+                 name => 'bluestore allocator',
+                 shortname => 'bsa',
+                 default => 'bitmap',
+                 prettifier => sub { return $_[0] }
+             },
+             {
+                 name => 'bluefs max log runway',
+                 shortname => 'rwy',
+                 default => 4 << 20,
+                 prettifier => sub { $_[0] % 1<<20 ? $_[0] : sprintf("%dMiB", $_[0] >> 20) }
+             }
+            )) {
+            ($value, $inheritance) = node_option($id, $option->{name}, $option->{default});
+            printf(" %s=%s%s",
+                   $option->{shortname},
+                   $option->{prettifier}($value),
+                   pretty_inheritance_level($inheritance));
+        }
+        printf("): %s", $osd->{status});
         if (exists $osd->{osd_pid}) {
             printf(" - ceph-osd running since %s, pid %d",
                    $osd->{osd_start}, $osd->{osd_pid});
