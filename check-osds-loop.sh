@@ -27,6 +27,7 @@ CHECK_OSDS=./check-osds
 ##
 DST_HOST=xdp-test.leinen.ch
 DST_DIR=/var/www/html/ceph/ls
+SSH_OPTIONS="-i ${HOME}/.ssh/id_ceph_ed25519"
 
 ## Actually the "sleep time" between runs.
 ##
@@ -61,7 +62,7 @@ do
   then
     if [ "z${DST_HOST}" != z ]
     then
-      scp -q $f ${DST_HOST}:${DST_DIR}/osd-status
+      scp -q ${SSH_OPTIONS} $f ${DST_HOST}:${DST_DIR}/osd-status
     fi
   fi
   sleep ${INTERVAL}
