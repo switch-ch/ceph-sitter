@@ -29,6 +29,7 @@ sub collect_osd_tree () {
             $nodes{$id}->{parent} = $host_ids{$host};
             $nodes{$id}->{status} = $status;
             $nodes{$id}->{weight} = $weight;
+            $nodes{$id}->{reweight} = $reweight;
         } elsif (($id, $weight, $name)
             = /^\s*(-?\d+)\s*([0-9.]+)\s*host\s+(\S+)\s*$/) {
             # warn "found host: $name\n";
@@ -156,6 +157,8 @@ sub print_report() {
         next if $id < 0;        # Ignore hosts and root
         $osd = $nodes{$id};
         next if $osd->{status} eq 'up';
+        next if $osd->{weight} == 0;
+        next if $osd->{reweight} == 0;
         ++$unhealthy_count;
         $host = $osd->{host};
         $host_head = (defined $last_host and $last_host eq $host)
