@@ -101,3 +101,21 @@ OSD 95 has just started up, it might be in a crash loop (see above).
 OSE 198 is being worked on! Someone is running an offline compaction
 job.  Once the compaction has finished (typically takes between 25 and
 50 minutes), it should be possible to start it up normally.
+
+## Alerting
+
+There is a simple alerting feature, driven by configuration files.
+
+If a file `.alert.url` exists, its contents are interpreted as a
+Slack-compatible incoming Webhook.  Whenever there's a status change,
+a message will be sent to that Webhook.
+
+If a file `.self.url` exists, a pointer to its contents—which should
+be a URL—is added to any alert messages, referring alertees to the
+status page.
+
+Alerts are only sent if the situation changes between the following
+states:
+
+* _Not more than 2 OSDs down_
+* _More than 2 OSDs down_
