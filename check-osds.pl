@@ -8,6 +8,34 @@ my %host_ids = ();
 
 my $helpful_suggestions = 0;
 
+my $alert_url_file = ".alert.url";
+my $self_url_file = ".self.url";
+my $last_alert_file = ".last-alert.txt";
+
+my $agent;
+
+sub string_from_file($ ) {
+    my ($file) = @_;
+    my $result = '';
+    return undef unless -r $file;
+    open(FILE, $file) || die "cannot open $file: $!";
+    while(<FILE>) {
+        $result .= $_;
+    }
+    chomp $result;
+    close(FILE) or die "error closing $file: $!";
+    return $result;
+}
+
+my $alert_url = string_from_file($alert_url_file);
+my $self_url = string_from_file($self_url_file);
+
+if (defined $alert_url) {
+    use LWP::UserAgent;
+
+    $agent = LWP::UserAgent->new(agent => 'perl post');
+}
+
 ## Prototypes
 sub node_option($$@);
 
@@ -147,6 +175,18 @@ sub pretty_inheritance_level($ ) {
     return substr(".*???????@", $level, 1);
 }
 
+sub alert_text($ ) {
+    my ($unhealthy_count) = @_;
+    my $result = '';
+    if ($unhealthy_count <= 2) {
+        $result = 'Not more than 2 OSDs down.\n';
+    } else {
+        $result = sprintf("More than 2 OSDs down.\n", $unhealthy_count);
+    }
+    $result .= 'Check out '.$self_url.'\n' if defined $self_url;
+    return $result;
+}
+
 sub print_report() {
     print(scalar(localtime(time)),"\n\n");
     my ($id, $osd, $value, $inheritance, $host, $last_host, $host_head, $unhealthy_count);
@@ -214,6 +254,31 @@ sub print_report() {
         printf("Congratulations, all OSDs seem to be up.\n");
     } else {
         print("\nFor explanation the output, see https://github.com/switch-ch/ceph-sitter\n");
+    }
+
+    if (defined $alert_url) {
+        my $alert = alert_text($unhealthy_count);
+        my $last_alert = string_from_file($last_alert_file);
+
+        unless ($alert eq $last_alert) {
+
+            push @{ $agent->requests_redirectable }, 'POST';
+            my $header  = HTTP::Headers->new;
+            my $json = '{"text":"'.$alert.'"}';
+
+            $header->header('Content-Type'  => "application/json; charset=UTF-8");
+            my $request = HTTP::Request->new(POST => $alert_url, $header, $json);
+            my $response = $agent->request($request);
+            if ($response->code != 200) {
+                warn("non-200 response code: ".$response->code);
+            }
+            if (!open(LAST_ALERT, ">$last_alert_file")) {
+                warn("Error creating $last_alert_file: $!");
+            } else {
+                print LAST_ALERT $alert or die "Error writing to $last_alert_file: $!";
+                close(LAST_ALERT) or die "Error closing $last_alert_file: $!";
+            }
+        }
     }
     1;
 }
