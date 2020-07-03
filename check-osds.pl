@@ -175,13 +175,13 @@ sub pretty_inheritance_level($ ) {
     return substr(".*???????@", $level, 1);
 }
 
-sub alert_text($ ) {
-    my ($unhealthy_count) = @_;
+sub alert_text($$) {
+    my ($unhealthy_count, $unhealthy_host_count) = @_;
     my $result = '';
-    if ($unhealthy_count <= 2) {
-        $result = 'Not more than 2 OSDs down.\n';
+    if ($unhealthy_count <= 2 or $unhealthy_host_count < 2) {
+        $result = 'Not more than 2 OSDs down, or more than 2 OSDs are down, but on a single host\n';
     } else {
-        $result = sprintf("More than 2 OSDs down.\n", $unhealthy_count);
+        $result = sprintf("More than 2 OSDs down on 2 or more hosts.\n", $unhealthy_count);
     }
     $result .= 'Check out '.$self_url.'\n' if defined $self_url;
     return $result;
@@ -189,9 +189,10 @@ sub alert_text($ ) {
 
 sub print_report() {
     print(scalar(localtime(time)),"\n\n");
-    my ($id, $osd, $value, $inheritance, $host, $last_host, $host_head, $unhealthy_count);
+    my ($id, $osd, $value, $inheritance, $host, $last_host, $host_head, $unhealthy_count, %unhealthy_hosts);
 
     $unhealthy_count = 0;
+    %unhealthy_hosts = ();
 
     foreach $id (sort { $nodes{$a}->{host} cmp $nodes{$b}->{host} || $a <=> $b } keys %nodes) {
         next if $id < 0;        # Ignore hosts and root
@@ -204,6 +205,7 @@ sub print_report() {
         $host_head = (defined $last_host and $last_host eq $host)
             ? ' ' x (length("host ")+length($host))
             : sprintf("host %s", $host);
+        $unhealthy_hosts{$host} = 1;
         $last_host = $host;
         printf("%s osd %3d (%4.1f %s",
                $host_head, $id,
@@ -257,7 +259,7 @@ sub print_report() {
     }
 
     if (defined $alert_url) {
-        my $alert = alert_text($unhealthy_count);
+        my $alert = alert_text($unhealthy_count, scalar %unhealthy_hosts);
         my $last_alert = string_from_file($last_alert_file);
 
         unless ($alert eq $last_alert) {
